@@ -22,21 +22,82 @@ import { OptionCardGroup } from './OptionCard';
 const TOTAL_STEPS = 5;
 
 const STAGE_OPTIONS: { value: Stage; label: string; description: string }[] = [
-  { value: 'idea', label: 'Just an idea', description: "I haven't started yet — this is still a concept." },
-  { value: 'registered_not_trading', label: 'Registered, not trading yet', description: "My business is legally registered but hasn't opened its doors." },
-  { value: 'registered_trading', label: 'Registered and trading', description: 'My business is live and making money.' },
-  { value: 'trading_not_registered', label: 'Trading, not registered', description: "I'm operating informally and haven't registered yet." },
+  { value: 'idea',                    label: 'Just an idea',               description: "I haven't started yet — this is still a concept." },
+  { value: 'registered_not_trading',  label: 'Registered, not trading yet', description: "My business is legally registered but hasn't opened its doors." },
+  { value: 'registered_trading',      label: 'Registered and trading',      description: 'My business is live and making money.' },
+  { value: 'trading_not_registered',  label: 'Trading, not registered',     description: "I'm operating informally and haven't registered yet." },
 ];
 
 const PURPOSE_OPTIONS: { value: PlanPurpose; label: string; description: string }[] = [
-  { value: 'bank_loan', label: 'Bank loan', description: 'To support a funding application with a bank.' },
-  { value: 'grant', label: 'Grant application', description: 'For a government or NGO grant.' },
-  { value: 'investor', label: 'Investor pitch', description: 'To present to angel investors or VCs.' },
-  { value: 'personal', label: 'Personal roadmap', description: "Just for my own planning and clarity." },
+  { value: 'bank_loan',  label: 'Bank loan',          description: 'To support a funding application with a bank.' },
+  { value: 'grant',      label: 'Grant application',  description: 'For a government or NGO grant.' },
+  { value: 'investor',   label: 'Investor pitch',      description: 'To present to angel investors or VCs.' },
+  { value: 'personal',   label: 'Personal roadmap',    description: 'Just for my own planning and clarity.' },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Component                                                            */
+/* Refinement item — individual expandable optional question           */
+/* ------------------------------------------------------------------ */
+
+interface RefinementItemProps {
+  icon: string;
+  question: string;
+  hint: string;
+  value: string;
+  error?: string;
+  children: React.ReactNode;
+}
+
+function RefinementItem({ icon, question, hint, value, children }: RefinementItemProps) {
+  const [open, setOpen] = useState(false);
+  const answered = value.trim().length > 0;
+
+  return (
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-[var(--color-bg)] transition-colors"
+      >
+        {/* Icon */}
+        <span className="text-xl flex-shrink-0 w-8 text-center">{icon}</span>
+
+        {/* Text */}
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-medium text-[var(--color-heading)]">{question}</span>
+          {answered ? (
+            <span className="block text-xs text-[var(--color-teal)] mt-0.5 truncate">{value}</span>
+          ) : (
+            <span className="block text-xs text-[var(--color-muted)] mt-0.5">{hint}</span>
+          )}
+        </span>
+
+        {/* State badge + chevron */}
+        <span className="flex items-center gap-2 flex-shrink-0">
+          {answered && (
+            <span className="rounded-full bg-[var(--color-teal-light)] border border-[var(--color-teal)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--color-teal)]">
+              Added
+            </span>
+          )}
+          <span
+            className={`text-[var(--color-muted)] transition-transform duration-200 text-xs ${open ? 'rotate-180' : ''}`}
+          >
+            ▾
+          </span>
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-5 pb-5 pt-1 border-t border-[var(--color-border)]">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Main form                                                            */
 /* ------------------------------------------------------------------ */
 
 interface QuestionnaireFormProps {
@@ -45,15 +106,14 @@ interface QuestionnaireFormProps {
 
 export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
   const [step, setStep] = useState(1);
-  const [showOptional, setShowOptional] = useState(false);
 
   const {
     register,
     control,
     handleSubmit,
     trigger,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getValues,
+    setValue,
+    watch,
     formState: { errors },
     // z.preprocess on optional fields widens the inferred type to `unknown`,
     // conflicting with react-hook-form's generic. Casting via Resolver<QuestionnaireAnswers>
@@ -73,6 +133,11 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
       pricePoint: '',
     },
   });
+
+  // Watch optional fields so RefinementItem can show live preview and "Added" badge.
+  // Using a single watch([...]) call returns a stable tuple and avoids the
+  // react-hooks/incompatible-library warning about per-field watch() calls.
+  const [uspValue, competitorsValue, pricePointValue] = watch(['usp', 'competitors', 'pricePoint']);
 
   // Fields that belong to each step for targeted validation
   const stepFields: Record<number, (keyof QuestionnaireAnswers)[]> = {
@@ -103,8 +168,8 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
         <ProgressDots total={TOTAL_STEPS} current={step - 1} />
       </div>
 
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <form onSubmit={(handleSubmit as any)(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+
         {/* ── Step 1: Business basics ── */}
         {step === 1 && (
           <div className="flex flex-col gap-6">
@@ -128,12 +193,7 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               error={errors.location?.message}
               chips={['Lagos', 'Abuja', 'Port Harcourt', 'Nairobi', 'Accra']}
               onChipClick={(chip) => {
-                // controlled by register, so we manually set via setValue equivalent
-                const el = document.querySelector<HTMLInputElement>('input[name="location"]');
-                if (el) {
-                  el.value = chip;
-                  el.dispatchEvent(new Event('input', { bubbles: true }));
-                }
+                setValue('location', chip, { shouldValidate: true, shouldDirty: true });
               }}
               {...register('location')}
             />
@@ -219,38 +279,52 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
           </div>
         )}
 
-        {/* ── Step 5: Optional refinements ── */}
+        {/* ── Step 5: Make it stronger (optional refinements) ── */}
         {step === 5 && (
           <div className="flex flex-col gap-6">
             <StepHeader
               step={5}
               total={TOTAL_STEPS}
-              title="Optional refinements"
-              description="These details sharpen your competitive analysis and pricing sections. Skip if you're not sure yet."
+              title="Make it stronger"
+              description="These three questions are completely optional. Answering them sharpens your competitive analysis, positioning, and pricing sections — but you can skip any or all of them."
             />
 
-            <button
-              type="button"
-              onClick={() => setShowOptional((v) => !v)}
-              className="flex items-center gap-2 text-sm text-[var(--color-teal)] font-medium hover:underline self-start"
-            >
-              <span
-                className={`inline-block transition-transform duration-200 ${showOptional ? 'rotate-90' : ''}`}
-              >
-                ▶
+            {/* Optional badge */}
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-muted)]">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-border)]" />
+                All fields optional — tap to answer
               </span>
-              {showOptional ? 'Hide optional fields' : 'Add more detail (optional)'}
-            </button>
+            </div>
 
-            {showOptional && (
-              <div className="flex flex-col gap-5 pt-1">
+            {/* Refinement items */}
+            <div className="flex flex-col gap-3">
+
+              {/* USP */}
+              <RefinementItem
+                icon="✦"
+                question="What's your unique selling point?"
+                hint="What makes your offer different or better than alternatives?"
+                value={typeof uspValue === 'string' ? uspValue : ''}
+                error={errors.usp?.message}
+              >
                 <TextareaField
-                  label="Your unique selling point (USP)"
+                  label="Your USP"
                   placeholder="e.g. We're the only service offering farm-to-door delivery within 60 minutes in Lagos"
                   hint="What makes your offer different or better than alternatives?"
                   error={errors.usp?.message}
                   {...register('usp')}
                 />
+              </RefinementItem>
+
+              {/* Competitors */}
+              <RefinementItem
+                icon="◈"
+                question="Who are your biggest local competitors?"
+                hint="Name them or describe what your customers currently use instead."
+                value={typeof competitorsValue === 'string' ? competitorsValue : ''}
+                error={errors.competitors?.message}
+              >
                 <TextareaField
                   label="Known competitors"
                   placeholder="e.g. Market Square, FreshDirect NG, local market vendors"
@@ -258,21 +332,30 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
                   error={errors.competitors?.message}
                   {...register('competitors')}
                 />
+              </RefinementItem>
+
+              {/* Price point */}
+              <RefinementItem
+                icon="₦"
+                question="What's your average price point?"
+                hint="Your main product or service price, with currency."
+                value={typeof pricePointValue === 'string' ? pricePointValue : ''}
+                error={errors.pricePoint?.message}
+              >
                 <TextInputField
                   label="Price point"
                   placeholder="e.g. ₦4,500 per box / $20 per session"
-                  hint="Your main product or service price. Must include a number."
+                  hint="Must include a number and ideally a currency symbol."
                   error={errors.pricePoint?.message}
                   {...register('pricePoint')}
                 />
-              </div>
-            )}
+              </RefinementItem>
 
-            {!showOptional && (
-              <p className="text-sm text-[var(--color-muted)]">
-                You can generate your plan now — these fields are entirely optional.
-              </p>
-            )}
+            </div>
+
+            <p className="text-xs text-[var(--color-muted)] text-center">
+              Ready? Hit <strong className="font-medium text-[var(--color-heading)]">Generate my plan</strong> — answered or not.
+            </p>
           </div>
         )}
 
