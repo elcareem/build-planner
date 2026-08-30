@@ -166,9 +166,8 @@ function buildUserPrompt(answers: QuestionnaireAnswers): string {
 // JSON Schema for the tool input_schema
 // ---------------------------------------------------------------------------
 
-// zodToJsonSchema is re-exported from packages/shared (zod-to-json-schema package).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const planJsonSchema = zodToJsonSchema(PlanSchema, { name: TOOL_NAME }) as any;
+const planJsonSchema = (zodToJsonSchema as any)(PlanSchema, { name: TOOL_NAME });
 
 // ---------------------------------------------------------------------------
 // Service
