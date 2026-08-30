@@ -19,6 +19,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
     "@build-planner/shared": "*",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
