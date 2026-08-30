@@ -6,6 +6,7 @@ interface TextInputFieldProps extends React.InputHTMLAttributes<HTMLInputElement
   label: string;
   hint?: string;
   error?: string;
+  optional?: boolean;
   chips?: string[];
   onChipClick?: (chip: string) => void;
 }
@@ -14,6 +15,7 @@ export function TextInputField({
   label,
   hint,
   error,
+  optional,
   chips,
   onChipClick,
   className,
@@ -21,7 +23,10 @@ export function TextInputField({
 }: TextInputFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-[var(--color-heading)]">{label}</label>
+      <label className="text-sm font-medium text-[var(--color-heading)]">
+        {label}
+        {optional && <span className="text-xs font-normal text-[var(--color-muted)] ml-1.5">(Optional)</span>}
+      </label>
       <input
         className={cn(
           'w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]',
@@ -57,12 +62,16 @@ interface TextareaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
   label: string;
   hint?: string;
   error?: string;
+  optional?: boolean;
 }
 
-export function TextareaField({ label, hint, error, className, ...props }: TextareaFieldProps) {
+export function TextareaField({ label, hint, error, optional, className, ...props }: TextareaFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-[var(--color-heading)]">{label}</label>
+      <label className="text-sm font-medium text-[var(--color-heading)]">
+        {label}
+        {optional && <span className="text-xs font-normal text-[var(--color-muted)] ml-1.5">(Optional)</span>}
+      </label>
       <textarea
         rows={3}
         className={cn(
