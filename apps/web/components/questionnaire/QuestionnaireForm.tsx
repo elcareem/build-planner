@@ -36,62 +36,53 @@ const PURPOSE_OPTIONS: { value: PlanPurpose; label: string; description: string 
 ];
 
 /* ------------------------------------------------------------------ */
-/* Refinement item — individual expandable optional question           */
+/* Refinement item — always-visible optional question card             */
 /* ------------------------------------------------------------------ */
 
 interface RefinementItemProps {
   icon: string;
   question: string;
-  hint: string;
-  value: string;
-  error?: string;
+  answered: boolean;
+  onSkip: () => void;
   children: React.ReactNode;
 }
 
-function RefinementItem({ icon, question, hint, value, children }: RefinementItemProps) {
-  const [open, setOpen] = useState(false);
-  const answered = value.trim().length > 0;
-
+function RefinementItem({ icon, question, answered, onSkip, children }: RefinementItemProps) {
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-[var(--color-bg)] transition-colors"
-      >
-        {/* Icon */}
-        <span className="text-xl flex-shrink-0 w-8 text-center">{icon}</span>
-
-        {/* Text */}
-        <span className="flex-1 min-w-0">
-          <span className="block text-sm font-medium text-[var(--color-heading)]">{question}</span>
-          {answered ? (
-            <span className="block text-xs text-[var(--color-teal)] mt-0.5 truncate">{value}</span>
-          ) : (
-            <span className="block text-xs text-[var(--color-muted)] mt-0.5">{hint}</span>
-          )}
-        </span>
-
-        {/* State badge + chevron */}
-        <span className="flex items-center gap-2 flex-shrink-0">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 flex flex-col gap-3">
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="text-base flex-shrink-0">{icon}</span>
+          <span className="text-sm font-medium text-[var(--color-heading)]">{question}</span>
           {answered && (
             <span className="rounded-full bg-[var(--color-teal-light)] border border-[var(--color-teal)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--color-teal)]">
-              Added
+              ✓ Added
             </span>
           )}
-          <span
-            className={`text-[var(--color-muted)] transition-transform duration-200 text-xs ${open ? 'rotate-180' : ''}`}
-          >
-            ▾
-          </span>
-        </span>
-      </button>
-
-      {open && (
-        <div className="px-5 pb-5 pt-1 border-t border-[var(--color-border)]">
-          {children}
         </div>
-      )}
+        {answered && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="flex-shrink-0 text-xs text-[var(--color-muted)] hover:text-red-500 transition-colors"
+          >
+            Clear
+          </button>
+        )}
+        {!answered && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="flex-shrink-0 text-xs text-[var(--color-muted)] hover:text-[var(--color-heading)] transition-colors"
+          >
+            Skip
+          </button>
+        )}
+      </div>
+
+      {/* Input */}
+      {children}
     </div>
   );
 }
@@ -158,6 +149,9 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
   }
 
   function onSubmit(data: QuestionnaireAnswers) {
+    // Guard: only complete if we're on the final step.
+    // This prevents any accidental form submission from earlier steps.
+    if (step !== TOTAL_STEPS) return;
     onComplete(data);
   }
 
@@ -304,9 +298,8 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               <RefinementItem
                 icon="✦"
                 question="What's your unique selling point?"
-                hint="What makes your offer different or better than alternatives?"
-                value={typeof uspValue === 'string' ? uspValue : ''}
-                error={errors.usp?.message}
+                answered={typeof uspValue === 'string' && uspValue.trim().length > 0}
+                onSkip={() => setValue('usp', '', { shouldValidate: true, shouldDirty: true })}
               >
                 <TextareaField
                   label="Your USP"
@@ -321,9 +314,8 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               <RefinementItem
                 icon="◈"
                 question="Who are your biggest local competitors?"
-                hint="Name them or describe what your customers currently use instead."
-                value={typeof competitorsValue === 'string' ? competitorsValue : ''}
-                error={errors.competitors?.message}
+                answered={typeof competitorsValue === 'string' && competitorsValue.trim().length > 0}
+                onSkip={() => setValue('competitors', '', { shouldValidate: true, shouldDirty: true })}
               >
                 <TextareaField
                   label="Known competitors"
@@ -338,9 +330,8 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               <RefinementItem
                 icon="₦"
                 question="What's your average price point?"
-                hint="Your main product or service price, with currency."
-                value={typeof pricePointValue === 'string' ? pricePointValue : ''}
-                error={errors.pricePoint?.message}
+                answered={typeof pricePointValue === 'string' && pricePointValue.trim().length > 0}
+                onSkip={() => setValue('pricePoint', '', { shouldValidate: true, shouldDirty: true })}
               >
                 <TextInputField
                   label="Price point"

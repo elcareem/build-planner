@@ -43,8 +43,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
         {/* Badge */}
         <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs font-medium text-[var(--color-teal)] mb-8">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-teal)]" />
-          AI-powered · Free to try
+          AI-powered Business Plan· Free to try
         </span>
 
         <h1 className="text-4xl sm:text-5xl font-bold text-[var(--color-heading)] leading-tight tracking-tight max-w-xl mb-5">
@@ -103,20 +102,9 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-[var(--color-border)]">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-center">
           <span className="text-xs text-[var(--color-muted)]">
-            Build<span className="text-[var(--color-teal)] font-medium">Planner</span> — Pre-MVP
-          </span>
-          <span className="text-xs text-[var(--color-muted)]">
-            Inspired by{' '}
-            <a
-              href="https://bizplanner.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-[var(--color-heading)] transition-colors"
-            >
-              BizPlanner AI
-            </a>
+            Build<span className="text-[var(--color-teal)] font-medium">Planner</span>
           </span>
         </div>
       </footer>

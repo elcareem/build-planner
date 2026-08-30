@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { samplePlan } from '@build-planner/shared';
 import type { QuestionnaireAnswers } from '@build-planner/shared';
@@ -13,11 +13,24 @@ type ViewState = 'questionnaire' | 'preview';
 // Inner component — uses useSearchParams, so it needs Suspense above it
 function PlanPageInner() {
   const searchParams = useSearchParams();
-  // Derive initial view from ?preview=1 directly — avoids setState-in-effect lint error
-  const [view, setView] = useState<ViewState>(
-    searchParams.get('preview') === '1' ? 'preview' : 'questionnaire'
-  );
+  const router = useRouter();
+
+  // Read ?preview=1 once for the initial render — useState only uses its
+  // initialiser on the first mount so this is safe and lint-compliant.
+  const isPreviewParam = searchParams.get('preview') === '1';
+  const [view, setView] = useState<ViewState>(isPreviewParam ? 'preview' : 'questionnaire');
   const [answers, setAnswers] = useState<QuestionnaireAnswers | null>(null);
+
+  // Strip ?preview=1 from the URL after mount so it is consumed exactly once.
+  // No setState here — just a URL cleanup so back-navigation and reload always
+  // start clean at the questionnaire.
+  const stripped = useRef(false);
+  useEffect(() => {
+    if (stripped.current || !isPreviewParam) return;
+    stripped.current = true;
+    router.replace('/plan', { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleFormComplete(data: QuestionnaireAnswers) {
     setAnswers(data);
