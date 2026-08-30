@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env['PORT'] || 4000;
 
 const allowedOrigins = process.env['WEB_ORIGIN']
-  ? process.env['WEB_ORIGIN'].split(',').map((o) => o.trim())
+  ? process.env['WEB_ORIGIN'].split(',').map((o) => o.trim().replace(/\/+$/, ''))
   : ['http://localhost:3000', 'http://localhost:3001'];
 
 app.use(
