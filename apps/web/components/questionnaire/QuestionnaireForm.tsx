@@ -22,17 +22,17 @@ import { OptionCardGroup } from './OptionCard';
 const TOTAL_STEPS = 5;
 
 const STAGE_OPTIONS: { value: Stage; label: string; description: string }[] = [
-  { value: 'idea',                    label: 'Just an idea',               description: "I haven't started yet — this is still a concept." },
-  { value: 'registered_not_trading',  label: 'Registered, not trading yet', description: "My business is legally registered but hasn't opened its doors." },
-  { value: 'registered_trading',      label: 'Registered and trading',      description: 'My business is live and making money.' },
-  { value: 'trading_not_registered',  label: 'Trading, not registered',     description: "I'm operating informally and haven't registered yet." },
+  { value: 'idea', label: 'Just an idea', description: "I haven't started yet — this is still a concept." },
+  { value: 'registered_not_trading', label: 'Registered, not trading yet', description: "My business is legally registered but hasn't opened its doors." },
+  { value: 'registered_trading', label: 'Registered and trading', description: 'My business is live and making money.' },
+  { value: 'trading_not_registered', label: 'Trading, not registered', description: "I'm operating informally and haven't registered yet." },
 ];
 
 const PURPOSE_OPTIONS: { value: PlanPurpose; label: string; description: string }[] = [
-  { value: 'bank_loan',  label: 'Bank loan',          description: 'To support a funding application with a bank.' },
-  { value: 'grant',      label: 'Grant application',  description: 'For a government or NGO grant.' },
-  { value: 'investor',   label: 'Investor pitch',      description: 'To present to angel investors or VCs.' },
-  { value: 'personal',   label: 'Personal roadmap',    description: 'Just for my own planning and clarity.' },
+  { value: 'bank_loan', label: 'Bank loan', description: 'To support a funding application with a bank.' },
+  { value: 'grant', label: 'Grant application', description: 'For a government or NGO grant.' },
+  { value: 'investor', label: 'Investor pitch', description: 'To present to angel investors or VCs.' },
+  { value: 'personal', label: 'Personal roadmap', description: 'Just for my own planning and clarity.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -42,47 +42,55 @@ const PURPOSE_OPTIONS: { value: PlanPurpose; label: string; description: string 
 interface RefinementItemProps {
   icon: string;
   question: string;
+  description: string;
   answered: boolean;
-  onSkip: () => void;
+  onClear: () => void;
   children: React.ReactNode;
 }
 
-function RefinementItem({ icon, question, answered, onSkip, children }: RefinementItemProps) {
+function RefinementItem({ icon, question, description, answered, onClear, children }: RefinementItemProps) {
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6 flex flex-col gap-3 shadow-xs hover:border-[var(--color-teal)]/30 transition-colors">
       {/* Header row */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <span className="text-base flex-shrink-0">{icon}</span>
-          <span className="text-sm font-medium text-[var(--color-heading)]">{question}</span>
-          {answered && (
-            <span className="rounded-full bg-[var(--color-teal-light)] border border-[var(--color-teal)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--color-teal)]">
-              ✓ Added
-            </span>
-          )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-sm font-bold text-[var(--color-teal)] shrink-0 mt-0.5">
+            {icon}
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-semibold text-[var(--color-heading)] tracking-tight">
+                {question}
+              </h3>
+              <span className="rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-muted)]">
+                Optional
+              </span>
+              {answered && (
+                <span className="rounded-full bg-[var(--color-teal-light)] border border-[var(--color-teal)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--color-teal)]">
+                  ✓ Added
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+              {description}
+            </p>
+          </div>
         </div>
         {answered && (
           <button
             type="button"
-            onClick={onSkip}
-            className="flex-shrink-0 text-xs text-[var(--color-muted)] hover:text-red-500 transition-colors"
+            onClick={onClear}
+            className="shrink-0 text-xs font-medium text-red-500 hover:text-red-600 transition-colors pt-1"
           >
             Clear
-          </button>
-        )}
-        {!answered && (
-          <button
-            type="button"
-            onClick={onSkip}
-            className="flex-shrink-0 text-xs text-[var(--color-muted)] hover:text-[var(--color-heading)] transition-colors"
-          >
-            Skip
           </button>
         )}
       </div>
 
       {/* Input */}
-      {children}
+      <div className="mt-1">
+        {children}
+      </div>
     </div>
   );
 }
@@ -106,9 +114,6 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
     setValue,
     watch,
     formState: { errors },
-    // z.preprocess on optional fields widens the inferred type to `unknown`,
-    // conflicting with react-hook-form's generic. Casting via Resolver<QuestionnaireAnswers>
-    // is safe because the Zod resolver coerces and validates at runtime.
   } = useForm<QuestionnaireAnswers>({
     resolver: zodResolver(QuestionnaireAnswersSchema) as Resolver<QuestionnaireAnswers>,
     mode: 'onTouched',
@@ -136,29 +141,33 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
     2: ['targetCustomer'],
     3: ['stage'],
     4: ['capital', 'planPurpose'],
-    5: [],
+    5: [], // Step 5 fields (usp, competitors, pricePoint) are all optional
   };
 
-  async function handleNext() {
-    const valid = await trigger(stepFields[step]);
-    if (valid) setStep((s) => Math.min(s + 1, TOTAL_STEPS));
-  }
+  const handleNext = async () => {
+    const fieldsToValidate = stepFields[step];
+    if (fieldsToValidate && fieldsToValidate.length > 0) {
+      const isValid = await trigger(fieldsToValidate);
+      if (!isValid) return;
+    }
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  };
 
-  function handleBack() {
+  const handleBack = () => {
     setStep((s) => Math.max(s - 1, 1));
-  }
+  };
 
-  function onSubmit(data: QuestionnaireAnswers) {
-    // Guard: only complete if we're on the final step.
-    // This prevents any accidental form submission from earlier steps.
-    if (step !== TOTAL_STEPS) return;
+  const onSubmit = (data: QuestionnaireAnswers) => {
     onComplete(data);
-  }
+  };
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      {/* Progress */}
-      <div className="mb-8">
+    <div className="w-full max-w-xl mx-auto">
+      {/* Header with progress */}
+      <div className="flex items-center justify-between mb-8 pb-6 border-b border-[var(--color-border)]">
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-teal)]">
+          Questionnaire
+        </span>
         <ProgressDots total={TOTAL_STEPS} current={step - 1} />
       </div>
 
@@ -171,19 +180,19 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               step={1}
               total={TOTAL_STEPS}
               title="Tell us about your business"
-              description="A short summary and where you're based. This shapes everything in your plan."
+              description="Start with the core identity. What do you do, and where are you based?"
             />
             <TextInputField
               label="Business one-liner"
-              placeholder="e.g. A subscription box of locally sourced snacks delivered monthly"
-              hint="10–150 characters. Be specific — the more precise, the better your plan."
+              placeholder="e.g. Farm-to-door organic grocery delivery in Lagos"
+              hint="Describe your business in one clear sentence (10–150 characters)."
               error={errors.businessOneLiner?.message}
               {...register('businessOneLiner')}
             />
             <TextInputField
               label="Location"
               placeholder="e.g. Lagos, Nigeria"
-              hint="City or state where you primarily operate."
+              hint="City, state, or region where your business operates."
               error={errors.location?.message}
               chips={['Lagos', 'Abuja', 'Port Harcourt', 'Nairobi', 'Accra']}
               onChipClick={(chip) => {
@@ -200,13 +209,13 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
             <StepHeader
               step={2}
               total={TOTAL_STEPS}
-              title="Who are your customers?"
-              description="Describe the people or businesses you're selling to. Be as specific as you can."
+              title="Who is your target customer?"
+              description="Be specific — who buys from you, and what problem do you solve for them?"
             />
             <TextareaField
               label="Target customer"
-              placeholder="e.g. Urban professionals aged 25–40 in Lagos who want healthy, convenient meals but don't have time to cook"
-              hint="5–150 characters. Think demographics, behaviours, or pain points."
+              placeholder="e.g. Busy urban professionals aged 25–45 in Victoria Island who value health and convenience"
+              hint="Describe your ideal buyer, demographic, or buyer persona."
               error={errors.targetCustomer?.message}
               {...register('targetCustomer')}
             />
@@ -280,31 +289,31 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               step={5}
               total={TOTAL_STEPS}
               title="Make it stronger"
-              description="These three questions are completely optional. Answering them sharpens your competitive analysis, positioning, and pricing sections — but you can skip any or all of them."
+              description="These three questions are completely optional. Answering them sharpens your competitive analysis, positioning, and pricing sections."
             />
 
-            {/* Optional badge */}
+            {/* Optional badge banner */}
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-muted)]">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-border)]" />
-                All fields optional — tap to answer
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-teal)]" />
+                All 3 fields below are optional — fill in any or click Skip
               </span>
             </div>
 
             {/* Refinement items */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
 
               {/* USP */}
               <RefinementItem
                 icon="✦"
-                question="What's your unique selling point?"
+                question="Unique Selling Point"
+                description="What makes your offer different or better than alternatives?"
                 answered={typeof uspValue === 'string' && uspValue.trim().length > 0}
-                onSkip={() => setValue('usp', '', { shouldValidate: true, shouldDirty: true })}
+                onClear={() => setValue('usp', '', { shouldValidate: true, shouldDirty: true })}
               >
                 <TextareaField
-                  label="Your USP"
+                  label=""
                   placeholder="e.g. We're the only service offering farm-to-door delivery within 60 minutes in Lagos"
-                  hint="What makes your offer different or better than alternatives?"
                   error={errors.usp?.message}
                   {...register('usp')}
                 />
@@ -313,14 +322,14 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               {/* Competitors */}
               <RefinementItem
                 icon="◈"
-                question="Who are your biggest local competitors?"
+                question="Main Competitors"
+                description="List names or describe the key alternatives your customers might use."
                 answered={typeof competitorsValue === 'string' && competitorsValue.trim().length > 0}
-                onSkip={() => setValue('competitors', '', { shouldValidate: true, shouldDirty: true })}
+                onClear={() => setValue('competitors', '', { shouldValidate: true, shouldDirty: true })}
               >
                 <TextareaField
-                  label="Known competitors"
+                  label=""
                   placeholder="e.g. Market Square, FreshDirect NG, local market vendors"
-                  hint="List names or describe the alternatives your customers might use."
                   error={errors.competitors?.message}
                   {...register('competitors')}
                 />
@@ -329,14 +338,14 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               {/* Price point */}
               <RefinementItem
                 icon="₦"
-                question="What's your average price point?"
+                question="Average Price Point"
+                description="Include a number and currency symbol for accurate pricing models."
                 answered={typeof pricePointValue === 'string' && pricePointValue.trim().length > 0}
-                onSkip={() => setValue('pricePoint', '', { shouldValidate: true, shouldDirty: true })}
+                onClear={() => setValue('pricePoint', '', { shouldValidate: true, shouldDirty: true })}
               >
                 <TextInputField
-                  label="Price point"
+                  label=""
                   placeholder="e.g. ₦4,500 per box / $20 per session"
-                  hint="Must include a number and ideally a currency symbol."
                   error={errors.pricePoint?.message}
                   {...register('pricePoint')}
                 />
@@ -344,8 +353,8 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
 
             </div>
 
-            <p className="text-xs text-[var(--color-muted)] text-center">
-              Ready? Hit <strong className="font-medium text-[var(--color-heading)]">Generate my plan</strong> — answered or not.
+            <p className="text-xs text-[var(--color-muted)] text-center mt-1">
+              Ready? Click <strong className="font-medium text-[var(--color-heading)]">Generate my plan</strong> anytime to begin.
             </p>
           </div>
         )}
@@ -373,12 +382,14 @@ export function QuestionnaireForm({ onComplete }: QuestionnaireFormProps) {
               Continue →
             </button>
           ) : (
-            <button
-              type="submit"
-              className="rounded-lg bg-[var(--color-teal)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-teal-hover)] transition-colors"
-            >
-              Generate my plan →
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                className="rounded-lg bg-[var(--color-teal)] px-6 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-teal-hover)] transition-colors"
+              >
+                Generate my plan →
+              </button>
+            </div>
           )}
         </div>
       </form>
