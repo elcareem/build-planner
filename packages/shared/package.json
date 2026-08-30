@@ -1,0 +1,11 @@
+{
+  "name": "@build-planner/shared",
+  "version": "0.0.1",
+  "description": "Shared Zod schemas and types for build-planner (backend + web)",
+  "main": "index.ts",
+  "types": "index.ts",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

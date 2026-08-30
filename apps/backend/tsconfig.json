@@ -1,0 +1,39 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    // File Layout
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // Environment Settings
+    // CommonJS + Node types — matches ts-node-dev/Express, avoids ESM friction
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "lib": [
+      "ES2020"
+    ],
+    "types": [
+      "node"
+    ],
+    // requires: npm install -D @types/node (already installed per setup steps)
+    // Interop
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    // Other Outputs
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    // Stricter Typechecking Options
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    // Style Options
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // Recommended Options
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src"
+  ]
+}
