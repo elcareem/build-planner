@@ -9,7 +9,20 @@ import { exportPdfRouter } from './routes/exportPdf.route';
 const app = express();
 const PORT = process.env['PORT'] || 4000;
 
-app.use(cors({ origin: process.env['WEB_ORIGIN'] || 'http://localhost:3000' }));
+const allowedOrigins = process.env['WEB_ORIGIN']
+  ? process.env['WEB_ORIGIN'].split(',').map((o) => o.trim())
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
+  })
+);
 app.use(express.json());
 
 /**
