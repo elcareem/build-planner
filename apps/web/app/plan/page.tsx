@@ -1,7 +1,8 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { samplePlan } from '@build-planner/shared';
 import type { QuestionnaireAnswers } from '@build-planner/shared';
 import { QuestionnaireForm } from '@/components/questionnaire/QuestionnaireForm';
@@ -12,15 +13,11 @@ type ViewState = 'questionnaire' | 'preview';
 // Inner component — uses useSearchParams, so it needs Suspense above it
 function PlanPageInner() {
   const searchParams = useSearchParams();
-  const [view, setView] = useState<ViewState>('questionnaire');
+  // Derive initial view from ?preview=1 directly — avoids setState-in-effect lint error
+  const [view, setView] = useState<ViewState>(
+    searchParams.get('preview') === '1' ? 'preview' : 'questionnaire'
+  );
   const [answers, setAnswers] = useState<QuestionnaireAnswers | null>(null);
-
-  // ?preview=1 from the landing page "See a sample plan" CTA
-  useEffect(() => {
-    if (searchParams.get('preview') === '1') {
-      setView('preview');
-    }
-  }, [searchParams]);
 
   function handleFormComplete(data: QuestionnaireAnswers) {
     setAnswers(data);
@@ -39,12 +36,12 @@ function PlanPageInner() {
       {/* Top nav bar */}
       <nav className="sticky top-0 z-10 bg-[var(--color-bg)]/90 backdrop-blur-sm border-b border-[var(--color-border)]">
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a
+          <Link
             href="/"
             className="text-sm font-semibold text-[var(--color-heading)] hover:opacity-80 transition-opacity"
           >
             Build<span className="text-[var(--color-teal)]">Planner</span>
-          </a>
+          </Link>
           {view === 'preview' && (
             <button
               onClick={handleStartOver}
