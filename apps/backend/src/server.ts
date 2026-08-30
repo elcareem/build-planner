@@ -1,9 +1,8 @@
+// dotenv MUST be the very first import so process.env is populated
+// before any other module (e.g. claude.service.ts) reads it.
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 import generateRouter from './routes/generate.route';
 
 const app = express();

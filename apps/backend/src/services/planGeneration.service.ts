@@ -167,7 +167,7 @@ function buildUserPrompt(answers: QuestionnaireAnswers): string {
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const planJsonSchema = (zodToJsonSchema as any)(PlanSchema, { name: TOOL_NAME });
+const { $schema: _$schema, ...planJsonSchema } = (zodToJsonSchema as any)(PlanSchema, { $refStrategy: 'none' }) as any;
 
 // ---------------------------------------------------------------------------
 // Service
