@@ -173,3 +173,33 @@ export async function exportPdf(plan: Plan): Promise<ExportPdfResult> {
     };
   }
 }
+
+export type GenerateSectionApiResult =
+  | { ok: true; data: unknown }
+  | { ok: false; message: string };
+
+export async function generateSectionApi(params: {
+  sectionKey: string;
+  currentContent?: unknown;
+  instruction: string;
+}): Promise<GenerateSectionApiResult> {
+  try {
+    const response = await fetch(`${API_URL}/v1/generate-section`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok || !body.success) {
+      const message = body?.error?.message ?? 'Failed to regenerate section. Please try again.';
+      return { ok: false, message };
+    }
+
+    return { ok: true, data: body.data };
+  } catch {
+    return { ok: false, message: 'Could not connect to section generator server. Please check your connection.' };
+  }
+}
+

@@ -43,6 +43,27 @@ export const PlanSectionsSchema = z.object({
 });
 export type PlanSections = z.infer<typeof PlanSectionsSchema>;
 
+export const SectionKeySchema = z.enum([
+  'executiveSummary',
+  'companyDescription',
+  'productsServices',
+  'marketAnalysis',
+  'competitiveLandscape',
+  'marketingStrategy',
+  'operationsPlan',
+  'managementTeam',
+  'swot',
+  'financialPlanPlaceholder',
+]);
+export type SectionKey = z.infer<typeof SectionKeySchema>;
+
+export const GenerateSectionRequestSchema = z.object({
+  sectionKey: SectionKeySchema,
+  currentContent: z.any().optional(),
+  instruction: z.string().min(1, 'Instruction is required'),
+});
+export type GenerateSectionRequest = z.infer<typeof GenerateSectionRequestSchema>;
+
 export const PlanSchema = z.object({
   businessName: z.string().min(1, 'Business name is required'),
   tagline: z.string().min(1, 'Tagline is required'),

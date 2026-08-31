@@ -4,6 +4,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import generateRouter from './routes/generate.route';
+import generateSectionRouter from './routes/generateSection.route';
 import { exportPdfRouter } from './routes/exportPdf.route';
 
 const app = express();
@@ -40,6 +41,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/v1/generate', generateRouter);
+app.use(generateSectionRouter);
 app.use(exportPdfRouter);
 
 const server = app.listen(PORT, () => {
