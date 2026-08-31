@@ -86,59 +86,74 @@ export function generatePdfHtml(plan: Plan): string {
       page-break-after: always;
     }
 
-    /* Cover Page */
+    /* Cover Page
+       Print-safe block layout (deliberately no flexbox / no 100vh, which have
+       poor headless-Chrome print support). Content flows top-down with sized
+       margins so the page reads like a bound document rather than a web view. */
     .cover-page {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 40px 20px;
+      padding: 18mm 6mm 0;
+      page-break-after: always;
+    }
+
+    /* Accent band — solid colour rule across the top of the cover */
+    .cover-accent-bar {
+      width: 100%;
+      height: 5mm;
+      background-color: #0d9488;
+      border-radius: 2px;
+      margin-bottom: 16mm;
     }
 
     .brand-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
       font-size: 10pt;
-      font-weight: 600;
+      font-weight: 700;
       color: #0d9488;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 24px;
+      letter-spacing: 0.14em;
+      margin: 0 0 10mm 0;
     }
 
-    .brand-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #0d9488;
-      border-radius: 50%;
-    }
-
+    /* Dominant element: the business name */
     .cover-title {
-      font-size: 28pt;
+      font-size: 30pt;
       font-weight: 800;
       color: #09090b;
-      line-height: 1.2;
-      margin-bottom: 12px;
+      line-height: 1.15;
       letter-spacing: -0.02em;
+      margin: 0 0 6mm 0;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
 
+    /* Accent rule line separating the title from the tagline */
+    .cover-rule {
+      width: 60mm;
+      height: 3px;
+      background-color: #0d9488;
+      border: none;
+      margin: 0 0 9mm 0;
+    }
+
+    /* Secondary element: the tagline */
     .cover-tagline {
       font-size: 13pt;
-      color: #71717a;
-      max-width: 480px;
-      margin-bottom: 40px;
-      line-height: 1.5;
+      font-weight: 500;
+      color: #3f3f46;
+      line-height: 1.55;
+      max-width: 100%;
+      margin: 0 0 24mm 0;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
 
+    /* Small, unobtrusive generated date, anchored near the foot of the page */
     .cover-meta {
       font-size: 9pt;
       color: #a1a1aa;
       border-top: 1px solid #e4e4e7;
-      padding-top: 16px;
-      width: 240px;
+      padding-top: 5mm;
+      width: 100%;
     }
 
     /* Section Styling */
@@ -296,11 +311,12 @@ export function generatePdfHtml(plan: Plan): string {
 
   <!-- Cover Page -->
   <div class="cover-page page-break">
+    <div class="cover-accent-bar"></div>
     <div class="brand-badge">
-      <span class="brand-dot"></span>
       BuildPlanner
     </div>
     <h1 class="cover-title">${escapeHtml(plan.businessName)}</h1>
+    <hr class="cover-rule" />
     <p class="cover-tagline">${escapeHtml(plan.tagline)}</p>
     <div class="cover-meta">
       Generated on ${formattedDate}
