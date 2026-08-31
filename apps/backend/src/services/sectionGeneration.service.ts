@@ -12,7 +12,7 @@ const MODEL = 'claude-sonnet-5';
 const MAX_TOKENS = 2048;
 
 const INJECTION_PATTERNS = [
-  /ignore\s+(previous|all|prior)\s+instructions?/i,
+  /ignore\s+.*instructions?/i,
   /you\s+are\s+now\s+/i,
   /forget\s+(everything|all|prior|previous)/i,
   /new\s+instructions?:/i,
