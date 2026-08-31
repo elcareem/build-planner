@@ -20,6 +20,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://
 const REQUEST_TIMEOUT_MS = 150_000;
 
 const GENERATE_PATH = '/v1/generate';
+const EXPORT_PDF_PATH = '/v1/export-pdf';
 
 export type GeneratePlanResult =
   | { ok: true; plan: Plan }
@@ -112,4 +113,63 @@ export async function generatePlan(answers: QuestionnaireAnswers): Promise<Gener
     ok: false,
     message: messageForCode(error?.error?.code, fallback),
   };
+}
+
+export type ExportPdfResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * POST the current plan to the backend /v1/export-pdf endpoint and trigger an
+ * in-browser file download. The filename is derived from the plan's business
+ * name by the backend via the Content-Disposition header.
+ *
+ * Never throws for expected failures — it always resolves to a result object so
+ * the caller can render an error state instead of crashing.
+ */
+export async function exportPdf(plan: Plan): Promise<ExportPdfResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${EXPORT_PDF_PATH}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(plan),
+    });
+  } catch {
+    return {
+      ok: false,
+      message: 'We couldn\'t reach the export service. Please check your connection and try again.',
+    };
+  }
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      message:
+        response.status >= 500
+          ? 'The PDF export hit a temporary problem on our end. Please try again in a moment.'
+          : 'We couldn\'t export your plan right now. Please try again.',
+    };
+  }
+
+  try {
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    // Derive filename from Content-Disposition if provided, otherwise fall back.
+    const disposition = response.headers.get('Content-Disposition') ?? '';
+    const match = /filename="([^"]+)"/.exec(disposition);
+    const filename = match?.[1] ?? 'business-plan.pdf';
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      message: 'The PDF downloaded but couldn\'t be saved. Please try again.',
+    };
+  }
 }
