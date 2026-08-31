@@ -45,6 +45,8 @@ function findExecutablePath(): string | undefined {
   }
 
   const cacheDirs = [
+    path.join(process.cwd(), '.cache', 'puppeteer'),
+    path.join(__dirname, '..', '..', '.cache', 'puppeteer'),
     '/opt/render/.cache/puppeteer',
     path.join(process.env.HOME || '/root', '.cache', 'puppeteer'),
   ];
