@@ -7,7 +7,7 @@ import { samplePlan } from '@build-planner/shared';
 import type { Plan, QuestionnaireAnswers } from '@build-planner/shared';
 import { QuestionnaireForm } from '@/components/questionnaire/QuestionnaireForm';
 import { PlanPreview } from '@/components/preview/PlanPreview';
-import { generatePlan } from '@/lib/api';
+import { generatePlan, exportPdf } from '@/lib/api';
 
 type Phase = 'questionnaire' | 'generating' | 'preview';
 
@@ -24,6 +24,8 @@ function PlanPageInner() {
   const [plan, setPlan] = useState<Plan | null>(isPreviewParam ? samplePlan : null);
   const [error, setError] = useState<string | null>(null);
   const [isSample, setIsSample] = useState(isPreviewParam);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Strip ?preview=1 from the URL after mount so it is consumed exactly once.
   // No setState here — just a URL cleanup so back-navigation and reload always
@@ -56,6 +58,17 @@ function PlanPageInner() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  async function handleExportPdf() {
+    if (!plan || isExporting) return;
+    setExportError(null);
+    setIsExporting(true);
+    const result = await exportPdf(plan);
+    setIsExporting(false);
+    if (!result.ok) {
+      setExportError(result.message);
+    }
+  }
+
   function handleRetry() {
     if (!answers) return;
     void handleFormComplete(answers);
@@ -74,6 +87,7 @@ function PlanPageInner() {
     setAnswers(null);
     setPlan(null);
     setError(null);
+    setExportError(null);
     setIsSample(false);
     setPhase('questionnaire');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -82,6 +96,7 @@ function PlanPageInner() {
   function handleEditAnswers() {
     setPlan(null);
     setError(null);
+    setExportError(null);
     setPhase('questionnaire');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -204,25 +219,43 @@ function PlanPageInner() {
             ) : plan ? (
               <>
                 {answers && (
-                  <div className="mb-8 rounded-xl border border-[var(--color-teal-light)] bg-[var(--color-teal-light)] px-5 py-4 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-[var(--color-teal)]">
-                        {isSample
-                          ? 'This is a sample plan.'
-                          : 'Your plan is ready! Every section was generated from your answers.'}
-                      </p>
-                      {isSample && (
-                        <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                          Answer the questionnaire to generate your own tailored plan.
+                  <div className="mb-8 rounded-xl border border-[var(--color-teal-light)] bg-[var(--color-teal-light)] px-5 py-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-[var(--color-teal)]">
+                          {isSample
+                            ? 'This is a sample plan.'
+                            : 'Your plan is ready! Every section was generated from your answers.'}
                         </p>
-                      )}
+                        {isSample && (
+                          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                            Answer the questionnaire to generate your own tailored plan.
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-shrink-0 items-center gap-2">
+                        {!isSample && (
+                          <button
+                            onClick={() => { void handleExportPdf(); }}
+                            disabled={isExporting}
+                            className="rounded-lg border border-[var(--color-teal)] px-4 py-1.5 text-xs font-medium text-[var(--color-teal)] hover:bg-[var(--color-teal)] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isExporting ? 'Exporting…' : 'Download PDF'}
+                          </button>
+                        )}
+                        <button
+                          onClick={handleEditAnswers}
+                          className="rounded-lg border border-[var(--color-teal)] px-4 py-1.5 text-xs font-medium text-[var(--color-teal)] hover:bg-[var(--color-teal)] hover:text-white transition-colors"
+                        >
+                          {isSample ? 'Generate my plan' : 'Edit answers'}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={handleEditAnswers}
-                      className="flex-shrink-0 rounded-lg border border-[var(--color-teal)] px-4 py-1.5 text-xs font-medium text-[var(--color-teal)] hover:bg-[var(--color-teal)] hover:text-white transition-colors"
-                    >
-                      {isSample ? 'Generate my plan' : 'Edit answers'}
-                    </button>
+                    {exportError && (
+                      <p className="text-xs text-red-600 border-t border-[var(--color-teal-light)] pt-2">
+                        {exportError}
+                      </p>
+                    )}
                   </div>
                 )}
                 <PlanPreview plan={plan} />
