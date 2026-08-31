@@ -3,6 +3,29 @@ import type { Plan } from '@build-planner/shared';
 import { generatePdfHtml } from '../lib/pdfTemplate';
 import fs from 'fs';
 
+import path from 'path';
+
+function findChromeInDir(dirPath: string): string | undefined {
+  if (!fs.existsSync(dirPath)) return undefined;
+
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      if (entry.isDirectory()) {
+        const result = findChromeInDir(fullPath);
+        if (result) return result;
+      } else if (entry.isFile() && (entry.name === 'chrome' || entry.name === 'chromium')) {
+        return fullPath;
+      }
+    }
+  } catch {
+    // Ignore read errors
+  }
+
+  return undefined;
+}
+
 function findExecutablePath(): string | undefined {
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
     return process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -18,6 +41,18 @@ function findExecutablePath(): string | undefined {
   for (const p of commonPaths) {
     if (fs.existsSync(p)) {
       return p;
+    }
+  }
+
+  const cacheDirs = [
+    '/opt/render/.cache/puppeteer',
+    path.join(process.env.HOME || '/root', '.cache', 'puppeteer'),
+  ];
+
+  for (const cacheDir of cacheDirs) {
+    const found = findChromeInDir(cacheDir);
+    if (found) {
+      return found;
     }
   }
 
